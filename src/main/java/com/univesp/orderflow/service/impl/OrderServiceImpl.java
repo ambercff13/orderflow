@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -40,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderDTO createOrder(CreateOrderDTO orderDTO, Authentication authentication) {
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ApiErrorException(HttpStatus.NOT_FOUND, "Usuário não encontrado."));
@@ -49,6 +51,13 @@ public class OrderServiceImpl implements OrderService {
         for (var itemData : orderDTO.items()) {
             Product product = productRepository.findById(itemData.productId())
                     .orElseThrow(() -> new ApiErrorException(HttpStatus.NOT_FOUND, "Produto não encontrado."));
+
+            if (itemData.quantity() > product.getQuantity()) {
+                throw new ApiErrorException(HttpStatus.BAD_REQUEST,
+                        "Estoque insuficiente para o produto " + product.getName() + ".");
+            }
+
+            product.setQuantity(product.getQuantity() - itemData.quantity());
 
             OrderItem item = new OrderItem();
             item.setOrder(order);
@@ -73,5 +82,13 @@ public class OrderServiceImpl implements OrderService {
             orders = orderRepository.findAllByUser_IdOrderByCreatedAtDesc(user.getId());
         }
         return orders.stream().map(orderMapper::toDTO).toList();
+    }
+
+    @Override
+    public OrderDTO updateOrderStatus(OrderDTO orderDTO, Authentication authentication) {
+        Order order = orderRepository.findById(orderDTO.getId())
+                .orElseThrow(() -> new ApiErrorException(HttpStatus.NOT_FOUND, "Pedido não encontrado."));
+        order.setStatus(orderDTO.getOrderStatus());
+        return orderMapper.toDTO(orderRepository.save(order));
     }
 }

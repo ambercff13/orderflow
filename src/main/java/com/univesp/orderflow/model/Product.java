@@ -23,4 +23,6 @@ public class Product {
     private String code;
     private BigDecimal price;
     private Integer quantity;
+    @Column
+    private String imageFileName;
 }

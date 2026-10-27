@@ -5,13 +5,10 @@ import com.univesp.orderflow.dto.OrderDTO;
 import com.univesp.orderflow.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -30,5 +27,10 @@ public class OrderController {
     @GetMapping
     public List<OrderDTO> listOrders(Authentication authentication) {
         return orderService.listOrders(authentication);
+    }
+
+    @PatchMapping
+    public OrderDTO updateOrderStatus(@RequestBody OrderDTO orderDTO, Authentication authentication) {
+        return orderService.updateOrderStatus(orderDTO, authentication);
     }
 }
